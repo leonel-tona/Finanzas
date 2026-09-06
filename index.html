@@ -17,8 +17,8 @@
     .tasa-box { flex: 1; background: #111827; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
     .tasa-box input { width: 65px; background: #030712; border: 1px solid #374151; color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: bold; }
 
-    .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; overflow-x: auto; }
-    .tab-btn { flex: 1; min-width: 60px; padding: 8px 4px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
+    .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
     .tab-btn.active { background: #1f2937; color: #ffffff; }
 
     .card { background: #111827; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #1f2937; }
@@ -42,14 +42,14 @@
 </head>
 <body>
 
-  <!-- Cabecera de Patrimonio -->
+  <!-- Cabecera -->
   <div class="header-card">
     <h2>Patrimonio Total Estimado</h2>
     <div class="total" id="patrimonioUSD">$0.00 / €0.00</div>
     <div class="subtotal" id="patrimonioBS">Bs. 0,00</div>
   </div>
 
-  <!-- Barra de Tasas Guardadas -->
+  <!-- Tasas de Cambio -->
   <div class="tasas-bar">
     <div class="tasa-box">
       <span>Tasa USD ($):</span>
@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <!-- Navegación por Pestañas Original -->
+  <!-- Pestañas Principales -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="verTab('flujo', this)">Flujo</button>
     <button class="tab-btn" onclick="verTab('divisas', this)">Divisas</button>
@@ -82,7 +82,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Cuenta / Método</label>
+        <label>Cuenta / Método de Pago</label>
         <select id="cuenta" class="form-control">
           <option value="efectivo_usd">Efectivo USD ($)</option>
           <option value="efectivo_eur">Efectivo EUR (€)</option>
@@ -97,13 +97,13 @@
       </div>
       <div class="form-group">
         <label>Descripción</label>
-        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Sueldo, Mercado...">
+        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Impresiones...">
       </div>
       <button class="btn-submit" onclick="guardarMovimiento()">Guardar Movimiento</button>
     </div>
 
     <div class="card">
-      <h3>Historial</h3>
+      <h3>Historial de Movimientos</h3>
       <div id="listaHistorial">
         <p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>
       </div>
@@ -159,8 +159,23 @@
   <!-- Vista: Uni -->
   <div id="tab-uni" class="tab-content">
     <div class="card">
-      <h3>Universidad / Control Académico</h3>
-      <p style="color: #6b7280; font-size: 12px;">Sección reservada para pagos de matrículas, impresiones o gastos académicos.</p>
+      <h3>Gastos Universitarios</h3>
+      <div class="form-group">
+        <label>Monto ($)</label>
+        <input type="number" id="uniMonto" class="form-control" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Concepto</label>
+        <input type="text" id="uniDesc" class="form-control" placeholder="Ej. Copias, Guía, Cuota...">
+      </div>
+      <button class="btn-submit" style="background: #3b82f6;" onclick="guardarGastoUni()">Registrar Gasto Uni</button>
+    </div>
+
+    <div class="card">
+      <h3>Historial Universidad</h3>
+      <div id="listaUni">
+        <p style="color: #6b7280; font-size: 11px; text-align: center;">Sin gastos universitarios registrados</p>
+      </div>
     </div>
   </div>
 
@@ -177,11 +192,12 @@
     let cashea = JSON.parse(localStorage.getItem('f_cashea')) || { total: 0, deuda: 0 };
     let tasas = JSON.parse(localStorage.getItem('f_tasas')) || { usd: 0, eur: 0 };
     let historial = JSON.parse(localStorage.getItem('f_historial')) || [];
+    let gastosUni = JSON.parse(localStorage.getItem('f_uni')) || [];
 
-    document.getElementById('tasaUSD').value = tasas.usd;
-    document.getElementById('tasaEUR').value = tasas.eur;
-    document.getElementById('casheaTotal').value = cashea.total;
-    document.getElementById('casheaDeuda').value = cashea.deuda;
+    document.getElementById('tasaUSD').value = tasas.usd || '';
+    document.getElementById('tasaEUR').value = tasas.eur || '';
+    document.getElementById('casheaTotal').value = cashea.total || '';
+    document.getElementById('casheaDeuda').value = cashea.deuda || '';
 
     function verTab(tab, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -241,13 +257,33 @@
       }
     }
 
+    function guardarGastoUni() {
+      const monto = parseFloat(document.getElementById('uniMonto').value);
+      const desc = document.getElementById('uniDesc').value || 'Gasto Universitario';
+
+      if (isNaN(monto) || monto <= 0) return alert('Ingresa un monto válido para el gasto de la Uni');
+
+      gastosUni.unshift({ id: Date.now(), monto, desc, fecha: new Date().toLocaleDateString() });
+      localStorage.setItem('f_uni', JSON.stringify(gastosUni));
+
+      document.getElementById('uniMonto').value = '';
+      document.getElementById('uniDesc').value = '';
+      render();
+    }
+
+    function eliminarUni(id) {
+      gastosUni = gastosUni.filter(item => item.id !== id);
+      localStorage.setItem('f_uni', JSON.stringify(gastosUni));
+      render();
+    }
+
     function guardarStorage() {
       localStorage.setItem('f_saldos', JSON.stringify(saldos));
       localStorage.setItem('f_historial', JSON.stringify(historial));
     }
 
     function render() {
-      // Divisas y Saldos
+      // Divisas
       document.getElementById('s-efectivo_usd').value = `$${saldos.efectivo_usd.toFixed(2)}`;
       document.getElementById('s-efectivo_eur').value = `€${saldos.efectivo_eur.toFixed(2)}`;
       document.getElementById('s-binance').value = `${saldos.binance.toFixed(2)} USDT`;
@@ -258,7 +294,7 @@
       const dispCashea = Math.max(0, cashea.total - cashea.deuda);
       document.getElementById('casheaDisponible').value = `$${dispCashea.toFixed(2)}`;
 
-      // Totales
+      // Totales Header
       const bsEnUSD = tasas.usd > 0 ? (saldos.bdv + saldos.efectivo_bs) / tasas.usd : 0;
       const totalUSD = saldos.efectivo_usd + saldos.binance + bsEnUSD;
       const totalBS = totalUSD * tasas.usd;
@@ -266,25 +302,43 @@
       document.getElementById('patrimonioUSD').innerText = `$${totalUSD.toFixed(2)} / €${saldos.efectivo_eur.toFixed(2)}`;
       document.getElementById('patrimonioBS').innerText = `Bs. ${totalBS.toFixed(2)}`;
 
-      // Historial
+      // Historial General
       const histDiv = document.getElementById('listaHistorial');
       if (historial.length === 0) {
         histDiv.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>';
-        return;
+      } else {
+        histDiv.innerHTML = historial.map(i => `
+          <div class="item-mov">
+            <div>
+              <strong>${i.desc}</strong><br>
+              <small style="color:#6b7280;">${i.cuenta.replace('_', ' ').toUpperCase()} • ${i.fecha}</small>
+            </div>
+            <div style="display:flex; align-items:center;">
+              <span class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}$${i.monto.toFixed(2)}</span>
+              <button class="btn-del" onclick="eliminarMovimiento(${i.id})">X</button>
+            </div>
+          </div>
+        `).join('');
       }
 
-      histDiv.innerHTML = historial.map(i => `
-        <div class="item-mov">
-          <div>
-            <strong>${i.desc}</strong><br>
-            <small style="color:#6b7280;">${i.cuenta.replace('_', ' ').toUpperCase()} • ${i.fecha}</small>
+      // Historial Uni
+      const uniDiv = document.getElementById('listaUni');
+      if (gastosUni.length === 0) {
+        uniDiv.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">Sin gastos universitarios registrados</p>';
+      } else {
+        uniDiv.innerHTML = gastosUni.map(i => `
+          <div class="item-mov">
+            <div>
+              <strong>${i.desc}</strong><br>
+              <small style="color:#6b7280;">UNI • ${i.fecha}</small>
+            </div>
+            <div style="display:flex; align-items:center;">
+              <span class="egreso">-$${i.monto.toFixed(2)}</span>
+              <button class="btn-del" onclick="eliminarUni(${i.id})">X</button>
+            </div>
           </div>
-          <div style="display:flex; align-items:center;">
-            <span class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}${i.monto.toFixed(2)}</span>
-            <button class="btn-del" onclick="eliminarMovimiento(${i.id})">X</button>
-          </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
 
     function borrarTodo() {
