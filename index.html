@@ -1,529 +1,228 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Finanzas PRO v4.1</title>
-    <style>
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-        body { background: #f4f6f8; color: #333; padding-bottom: 30px; }
-        header { background: #1a2530; color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; }
-        
-        /* PANEL DE SALDO TOTAL */
-        .dashboard { background: #0f172a; color: white; padding: 20px; text-align: center; border-bottom: 3px solid #3b82f6; }
-        .dash-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 5px; }
-        .dash-amount { font-size: 1.8rem; font-weight: bold; color: #38bdf8; }
-        .dash-sub { font-size: 0.9rem; color: #4ade80; margin-top: 5px; }
-        
-        .tasa-bar { background: #1e293b; color: white; padding: 10px 15px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .tasa-bar input { width: 80px; padding: 4px; border-radius: 4px; border: 1px solid #475569; background: #0f172a; color: white; text-align: center; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Finanzas PRO v4.1</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #121824; color: #ffffff; padding: 15px; }
+    
+    /* Header Patrimonio */
+    .header-card { background: #0b111e; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 15px; }
+    .header-card h2 { font-size: 11px; text-transform: uppercase; color: #8899a6; letter-spacing: 1px; }
+    .header-card .total { font-size: 26px; font-weight: bold; color: #38ef7d; margin: 5px 0; }
 
-        /* NAVEGACIÓN TAB */
-        .nav-tabs { display: flex; background: #2c3e50; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 12px 8px; color: #bdc3c7; background: none; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center; white-space: nowrap; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: #fff; border-bottom: 3px solid #38bdf8; background: #1a2530; }
+    /* Navegación por Pestañas */
+    .nav-tabs { display: flex; border-bottom: 2px solid #1f293d; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px; background: none; border: none; color: #8899a6; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .tab-btn.active { color: #ffffff; border-bottom: 3px solid #00c6ff; }
 
-        .tab-content { display: none; padding: 15px; }
-        .tab-content.active { display: block; }
+    /* Formularios y Tarjetas */
+    .card { background: #1a2332; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+    .card h3 { font-size: 15px; margin-bottom: 12px; color: #e1e8ed; }
+    
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: #8899a6; margin-bottom: 4px; }
+    .form-control { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2c3e50; background: #0f172a; color: #fff; font-size: 14px; }
+    
+    .btn-submit { width: 100%; padding: 12px; background: #10b981; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 15px; cursor: pointer; }
+    .btn-submit:active { background: #059669; }
 
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .card h3 { font-size: 1rem; color: #1e293b; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-
-        label { display: block; font-size: 0.8rem; font-weight: bold; color: #64748b; margin-top: 10px; margin-bottom: 4px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
-        
-        .btn { width: 100%; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; transition: 0.2s; }
-        .btn:active { opacity: 0.8; }
-        .btn-danger { background: #ef4444; }
-        .btn-secondary { background: #64748b; }
-        .btn-cashea { background: #f59e0b; }
-
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        .item-row:last-child { border-bottom: none; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: white; }
-        .badge-usd { background: #0284c7; }
-        .badge-eur { background: #8b5cf6; }
-        .badge-bs { background: #16a34a; }
-        
-        /* CASHEA STYLES */
-        .cashea-stat { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center; }
-        .cashea-stat-title { font-size: 0.75rem; color: #b45309; text-transform: uppercase; font-weight: bold; }
-        .cashea-stat-val { font-size: 1.5rem; font-weight: bold; color: #d97706; }
-        
-        .cuota-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .cuota-item.pagada { background: #f0fdf4; border-color: #bbf7d0; text-decoration: line-through; color: #166534; }
-        .cuota-check { width: auto; transform: scale(1.2); cursor: pointer; }
-        
-        .delete-btn { background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; }
-    </style>
+    /* Lista del Historial */
+    .item-movimiento { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #273549; font-size: 13px; }
+    .ingreso { color: #38ef7d; }
+    .egreso { color: #ff4e50; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
 </head>
 <body>
 
-    <header>Mis Finanzas PRO <span style="font-size:0.75rem; color:#38bdf8;">v4.1</span></header>
+  <!-- Cabecera -->
+  <div class="header-card">
+    <h2>Patrimonio Total Estimado</h2>
+    <div class="total" id="patrimonioTotal">$0.00</div>
+  </div>
 
-    <!-- RESUMEN PRINCIPAL -->
-    <div class="dashboard">
-        <div class="dash-title">Patrimonio Total Estimado</div>
-        <div class="dash-amount" id="patrimonio-usd">$0.00 / €0.00</div>
-        <div class="dash-sub" id="patrimonio-bs">Bs. 0.00</div>
+  <!-- Pestañas de Navegación -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="cambiarPestaña('flujo')">Flujo</button>
+    <button class="tab-btn" onclick="cambiarPestaña('divisas')">Cuentas</button>
+  </div>
+
+  <!-- Vista 1: Flujo (Registrar Movimiento) -->
+  <div id="vista-flujo" class="tab-content active">
+    <div class="card">
+      <h3>Registrar Movimiento</h3>
+      
+      <div class="form-group">
+        <label>Tipo de Operación</label>
+        <select id="tipo" class="form-control">
+          <option value="ingreso">Ingreso (+)</option>
+          <option value="egreso">Egreso (-)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Cuenta / Método de Pago</label>
+        <select id="cuenta" class="form-control">
+          <option value="efectivo_usd">Efectivo (USD $)</option>
+          <option value="efectivo_bs">Efectivo (Bs.)</option>
+          <option value="binance">Binance (USDT)</option>
+          <option value="bdv">Banco de Venezuela (BDV)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Monto</label>
+        <input type="number" id="monto" class="form-control" placeholder="0.00" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label>Descripción</label>
+        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Servicios...">
+      </div>
+
+      <button class="btn-submit" onclick="guardarMovimiento()">Guardar Movimiento</button>
     </div>
 
-    <!-- BARRA DE TASAS -->
-    <div class="tasa-bar">
-        <div>
-            <span>Tasa USD ($): </span>
-            <input type="number" id="tasa-usd" value="1" step="0.01" onchange="guardarTasas(); calcularTotales();">
-        </div>
-        <div>
-            <span>Tasa EUR (€): </span>
-            <input type="number" id="tasa-eur" value="1" step="0.01" onchange="guardarTasas(); calcularTotales();">
-        </div>
+    <div class="card">
+      <h3>Historial de Movimientos</h3>
+      <div id="listaHistorial">
+        <p style="color: #8899a6; font-size: 12px; text-align: center;">No hay movimientos registrados</p>
+      </div>
     </div>
+  </div>
 
-    <!-- MENÚ NAVEGACIÓN -->
-    <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('flujo')">Flujo</button>
-        <button class="tab-btn" onclick="switchTab('divisas')">Divisas</button>
-        <button class="tab-btn" onclick="switchTab('cashea')">Cashea</button>
-        <button class="tab-btn" onclick="switchTab('ajustes')">Ajustes</button>
+  <!-- Vista 2: Estado de Cuentas -->
+  <div id="vista-divisas" class="tab-content">
+    <div class="card">
+      <h3>Saldos Actuales por Cuenta</h3>
+      <div class="form-group">
+        <label>Efectivo (USD $)</label>
+        <input type="text" id="saldo-efectivo_usd" class="form-control" value="$0.00" readonly>
+      </div>
+      <div class="form-group">
+        <label>Efectivo (Bs.)</label>
+        <input type="text" id="saldo-efectivo_bs" class="form-control" value="Bs. 0.00" readonly>
+      </div>
+      <div class="form-group">
+        <label>Binance (USDT)</label>
+        <input type="text" id="saldo-binance" class="form-control" value="0.00 USDT" readonly>
+      </div>
+      <div class="form-group">
+        <label>Banco de Venezuela (BDV)</label>
+        <input type="text" id="saldo-bdv" class="form-control" value="Bs. 0.00" readonly>
+      </div>
     </div>
-
-    <!-- TAB 1: FLUJO DE CAJA (INGRESOS / EGRESOS) -->
-    <div id="tab-flujo" class="tab-content active">
-        <div class="card">
-            <h3>Registrar Movimiento</h3>
-            <label>Tipo</label>
-            <select id="mov-tipo">
-                <option value="ingreso">Ingreso (+)</option>
-                <option value="egreso">Egreso (-)</option>
-            </select>
-
-            <label>Moneda</label>
-            <select id="mov-moneda">
-                <option value="USD">Dólares ($)</option>
-                <option value="EUR">Euros (€)</option>
-                <option value="BS">Bolívares (Bs.)</option>
-            </select>
-
-            <label>Monto</label>
-            <input type="number" id="mov-monto" step="0.01" placeholder="0.00">
-
-            <label>Descripción</label>
-            <input type="text" id="mov-desc" placeholder="Ej. Trabajo, Mercado, Servicios...">
-
-            <button class="btn" onclick="agregarMovimiento()">Guardar Movimiento</button>
-        </div>
-
-        <div class="card">
-            <h3>Historial</h3>
-            <div id="lista-movimientos">
-                <div style="text-align:center; color:#94a3b8; padding:10px;">No hay movimientos registrados</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 2: DISPONIBLE EN DIVISAS Y EFECTIVO -->
-    <div id="tab-divisas" class="tab-content">
-        <div class="card">
-            <h3>Cuentas y Efectivo</h3>
-            <label>Efectivo USD ($)</label>
-            <input type="number" id="saldo-usd" step="0.01" value="0.00" onchange="guardarSaldos(); calcularTotales();">
-
-            <label>Efectivo EUR (€)</label>
-            <input type="number" id="saldo-eur" step="0.01" value="0.00" onchange="guardarSaldos(); calcularTotales();">
-
-            <label>Bolívares / Banco (Bs.)</label>
-            <input type="number" id="saldo-bs" step="0.01" value="0.00" onchange="guardarSaldos(); calcularTotales();">
-        </div>
-    </div>
-
-    <!-- TAB 3: CASHEA MEJORADO -->
-    <div id="tab-cashea" class="tab-content">
-        <div class="cashea-stat">
-            <div class="cashea-stat-title">Deuda Total Pendiente en Cashea</div>
-            <div class="cashea-stat-val" id="cashea-deuda-total">$0.00</div>
-            <div style="font-size:0.8rem; color:#92400e; margin-top:4px;" id="cashea-proximo-pago">Próximo pago: N/A</div>
-        </div>
-
-        <div class="card">
-            <h3>Nueva Compra Cashea</h3>
-            <label>Producto / Descripción</label>
-            <input type="text" id="cash-prod" placeholder="Ej. Zapato, Teléfono, Electrodoméstico">
-
-            <label>Monto Total del Producto ($)</label>
-            <input type="number" id="cash-total" step="0.01" placeholder="0.00" oninput="calcularCuotasCashea()">
-
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1;">
-                    <label>Monto Inicial ($)</label>
-                    <input type="number" id="cash-inicial" step="0.01" placeholder="0.00" oninput="calcularCuotasCashea()">
-                </div>
-                <div style="flex:1;">
-                    <label>N° Cuotas</label>
-                    <select id="cash-cant-cuotas" onchange="calcularCuotasCashea()">
-                        <option value="3">3 Cuotas</option>
-                        <option value="6">6 Cuotas</option>
-                        <option value="9">9 Cuotas</option>
-                        <option value="12">12 Cuotas</option>
-                    </select>
-                </div>
-            </div>
-
-            <label>Fecha de Compra / Pago de Inicial</label>
-            <input type="date" id="cash-fecha">
-
-            <!-- VISTA PREVIA DE CUOTAS -->
-            <div id="cash-preview" style="margin-top:12px; font-size:0.85rem; color:#475569; background:#f1f5f9; padding:8px; border-radius:6px;">
-                Calculando cuotas...
-            </div>
-
-            <button class="btn btn-cashea" onclick="guardarCompraCashea()">Registrar en Cashea</button>
-        </div>
-
-        <div class="card">
-            <h3>Mis Compras Activas</h3>
-            <div id="lista-cashea">
-                <div style="text-align:center; color:#94a3b8; padding:10px;">No hay compras registradas</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 4: AJUSTES -->
-    <div id="tab-ajustes" class="tab-content">
-        <div class="card">
-            <h3>Gestión de Datos</h3>
-            <button class="btn btn-secondary" onclick="exportarDatos()" style="margin-top:5px;">Copiar Respaldo (JSON)</button>
-            <button class="btn btn-danger" onclick="borrarTodo()" style="margin-top:10px;">Restablecer Todo</button>
-        </div>
-    </div>
-
-    <script>
-        // ESTADO GLOBAL
-        let datos = {
-            tasas: { usd: 1, eur: 1 },
-            saldos: { usd: 0, eur: 0, bs: 0 },
-            movimientos: [],
-            cashea: []
-        };
-
-        // INICIALIZACIÓN
-        window.onload = function() {
-            const dataGuardada = localStorage.getItem('mis_finanzas_pro_v4');
-            if (dataGuardada) {
-                try {
-                    datos = JSON.parse(dataGuardada);
-                } catch(e) { console.error("Error al cargar datos", e); }
-            }
-
-            // Cargar datos en UI
-            document.getElementById('tasa-usd').value = datos.tasas.usd || 1;
-            document.getElementById('tasa-eur').value = datos.tasas.eur || 1;
-            document.getElementById('saldo-usd').value = datos.saldos.usd || 0;
-            document.getElementById('saldo-eur').value = datos.saldos.eur || 0;
-            document.getElementById('saldo-bs').value = datos.saldos.bs || 0;
-            
-            // Set fecha de hoy por defecto
-            document.getElementById('cash-fecha').valueAsDate = new Date();
-
-            calcularCuotasCashea();
-            renderMovimientos();
-            renderCashea();
-            calcularTotales();
-        };
-
-        function guardarStorage() {
-            localStorage.setItem('mis_finanzas_pro_v4', JSON.stringify(datos));
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        function guardarTasas() {
-            datos.tasas.usd = parseFloat(document.getElementById('tasa-usd').value) || 1;
-            datos.tasas.eur = parseFloat(document.getElementById('tasa-eur').value) || 1;
-            guardarStorage();
-        }
-
-        function guardarSaldos() {
-            datos.saldos.usd = parseFloat(document.getElementById('saldo-usd').value) || 0;
-            datos.saldos.eur = parseFloat(document.getElementById('saldo-eur').value) || 0;
-            datos.saldos.bs = parseFloat(document.getElementById('saldo-bs').value) || 0;
-            guardarStorage();
-        }
-
-        function calcularTotales() {
-            let tUSD = datos.tasas.usd || 1;
-            let tEUR = datos.tasas.eur || 1;
-
-            let totalEnUSD = datos.saldos.usd + (datos.saldos.bs / tUSD);
-            let totalEnEUR = datos.saldos.eur + (datos.saldos.bs / tEUR);
-            let totalEnBS = datos.saldos.bs + (datos.saldos.usd * tUSD);
-
-            document.getElementById('patrimonio-usd').innerText = `$${totalEnUSD.toFixed(2)} / €${totalEnEUR.toFixed(2)}`;
-            document.getElementById('patrimonio-bs').innerText = `Bs. ${totalEnBS.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-
-            calcularEstadisticasCashea();
-        }
-
-        /* --- MOVIMIENTOS --- */
-        function agregarMovimiento() {
-            let tipo = document.getElementById('mov-tipo').value;
-            let moneda = document.getElementById('mov-moneda').value;
-            let monto = parseFloat(document.getElementById('mov-monto').value);
-            let desc = document.getElementById('mov-desc').value.trim();
-
-            if (isNaN(monto) || monto <= 0) return alert("Ingresa un monto válido");
-            if (!desc) desc = "Sin descripción";
-
-            let mov = {
-                id: Date.now(),
-                tipo,
-                moneda,
-                monto,
-                desc,
-                fecha: new Date().toLocaleDateString('es-VE')
-            };
-
-            datos.movimientos.unshift(mov);
-
-            // Ajustar saldos
-            if (moneda === 'USD') datos.saldos.usd += (tipo === 'ingreso' ? monto : -monto);
-            if (moneda === 'EUR') datos.saldos.eur += (tipo === 'ingreso' ? monto : -monto);
-            if (moneda === 'BS') datos.saldos.bs += (tipo === 'ingreso' ? monto : -monto);
-
-            document.getElementById('saldo-usd').value = datos.saldos.usd.toFixed(2);
-            document.getElementById('saldo-eur').value = datos.saldos.eur.toFixed(2);
-            document.getElementById('saldo-bs').value = datos.saldos.bs.toFixed(2);
-
-            document.getElementById('mov-monto').value = '';
-            document.getElementById('mov-desc').value = '';
-
-            guardarStorage();
-            renderMovimientos();
-            calcularTotales();
-        }
-
-        function borrarMovimiento(id) {
-            datos.movimientos = datos.movimientos.filter(m => m.id !== id);
-            guardarStorage();
-            renderMovimientos();
-        }
-
-        function renderMovimientos() {
-            let container = document.getElementById('lista-movimientos');
-            if (datos.movimientos.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:10px;">No hay movimientos registrados</div>`;
-                return;
-            }
-
-            let html = '';
-            datos.movimientos.forEach(m => {
-                let badgeClass = m.moneda === 'USD' ? 'badge-usd' : (m.moneda === 'EUR' ? 'badge-eur' : 'badge-bs');
-                let colorMonto = m.tipo === 'ingreso' ? '#16a34a' : '#dc2626';
-                let signo = m.tipo === 'ingreso' ? '+' : '-';
-                
-                html += `
-                    <div class="item-row">
-                        <div>
-                            <strong>${m.desc}</strong><br>
-                            <small style="color:#64748b;">${m.fecha}</small>
-                            <span class="badge ${badgeClass}">${m.moneda}</span>
-                        </div>
-                        <div style="font-weight:bold; color:${colorMonto}">
-                            ${signo}${m.monto.toFixed(2)}
-                            <button class="delete-btn" onclick="borrarMovimiento(${m.id})">✕</button>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        /* --- CASHEA CALCULOS Y MANEJO --- */
-        function calcularCuotasCashea() {
-            let total = parseFloat(document.getElementById('cash-total').value) || 0;
-            let inicial = parseFloat(document.getElementById('cash-inicial').value) || 0;
-            let numCuotas = parseInt(document.getElementById('cash-cant-cuotas').value) || 3;
-            let preview = document.getElementById('cash-preview');
-
-            if (total <= 0) {
-                preview.innerHTML = "Ingresa el monto total del producto para calcular.";
-                return;
-            }
-
-            let restante = total - inicial;
-            if (restante < 0) restante = 0;
-            let montoCuota = restante / numCuotas;
-
-            preview.innerHTML = `
-                <strong>Financiamiento:</strong><br>
-                • Inicial: <strong>$${inicial.toFixed(2)}</strong><br>
-                • Saldo a financiar: <strong>$${restante.toFixed(2)}</strong><br>
-                • <strong>${numCuotas} cuotas de $${montoCuota.toFixed(2)}</strong> cada 14 días.
-            `;
-        }
-
-        function guardarCompraCashea() {
-            let prod = document.getElementById('cash-prod').value.trim();
-            let total = parseFloat(document.getElementById('cash-total').value) || 0;
-            let inicial = parseFloat(document.getElementById('cash-inicial').value) || 0;
-            let numCuotas = parseInt(document.getElementById('cash-cant-cuotas').value) || 3;
-            let fechaStr = document.getElementById('cash-fecha').value;
-
-            if (!prod) return alert("Ingresa la descripción del producto");
-            if (total <= 0) return alert("Ingresa un monto válido");
-            if (!fechaStr) return alert("Selecciona la fecha de compra");
-
-            let fechaBase = new Date(fechaStr + 'T00:00:00');
-            let restante = total - inicial;
-            let montoCuota = restante / numCuotas;
-
-            let cuotasList = [];
-
-            // Generar fechas cada 14 días exactos
-            for (let i = 1; i <= numCuotas; i++) {
-                let fechaVenc = new Date(fechaBase);
-                fechaVenc.setDate(fechaVenc.getDate() + (i * 14));
-                
-                cuotasList.push({
-                    num: i,
-                    monto: montoCuota,
-                    fecha: fechaVenc.toISOString().split('T')[0],
-                    pagada: false
-                });
-            }
-
-            let nuevaCompra = {
-                id: Date.now(),
-                producto: prod,
-                total,
-                inicial,
-                numCuotas,
-                fechaCompra: fechaStr,
-                cuotas: cuotasList
-            };
-
-            datos.cashea.push(nuevaCompra);
-            guardarStorage();
-
-            // Limpiar form
-            document.getElementById('cash-prod').value = '';
-            document.getElementById('cash-total').value = '';
-            document.getElementById('cash-inicial').value = '';
-            
-            renderCashea();
-            calcularTotales();
-        }
-
-        function toggleCuotaCashea(compraId, cuotaNum) {
-            let compra = datos.cashea.find(c => c.id === compraId);
-            if (compra) {
-                let cuota = compra.cuotas.find(q => q.num === cuotaNum);
-                if (cuota) {
-                    cuota.pagada = !cuota.pagada;
-                    guardarStorage();
-                    renderCashea();
-                    calcularTotales();
-                }
-            }
-        }
-
-        function borrarCompraCashea(id) {
-            if (confirm("¿Seguro de eliminar esta compra de Cashea?")) {
-                datos.cashea = datos.cashea.filter(c => c.id !== id);
-                guardarStorage();
-                renderCashea();
-                calcularTotales();
-            }
-        }
-
-        function renderCashea() {
-            let container = document.getElementById('lista-cashea');
-            if (datos.cashea.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:10px;">No hay compras registradas</div>`;
-                return;
-            }
-
-            let html = '';
-            datos.cashea.forEach(c => {
-                let cuotasHtml = '';
-                c.cuotas.forEach(q => {
-                    let dateFormatted = new Date(q.fecha + 'T00:00:00').toLocaleDateString('es-VE');
-                    cuotasHtml += `
-                        <div class="cuota-item ${q.pagada ? 'pagada' : ''}">
-                            <div>
-                                <strong>Cuota ${q.num}:</strong> $${q.monto.toFixed(2)} 
-                                <small style="color:#64748b;">(${dateFormatted})</small>
-                            </div>
-                            <input type="checkbox" class="cuota-check" ${q.pagada ? 'checked' : ''} onclick="toggleCuotaCashea(${c.id}, ${q.num})">
-                        </div>
-                    `;
-                });
-
-                html += `
-                    <div style="border:1px solid #cbd5e1; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${c.producto}</strong>
-                            <button class="delete-btn" onclick="borrarCompraCashea(${c.id})">Eliminar</button>
-                        </div>
-                        <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">
-                            Total: $${c.total.toFixed(2)} | Inicial: $${c.inicial.toFixed(2)}
-                        </div>
-                        <div style="margin-top:8px;">
-                            ${cuotasHtml}
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function calcularEstadisticasCashea() {
-            let deudaTotal = 0;
-            let proximosPagos = [];
-
-            datos.cashea.forEach(c => {
-                c.cuotas.forEach(q => {
-                    if (!q.pagada) {
-                        deudaTotal += q.monto;
-                        proximosPagos.push({
-                            producto: c.producto,
-                            monto: q.monto,
-                            fecha: q.fecha
-                        });
-                    }
-                });
-            });
-
-            document.getElementById('cashea-deuda-total').innerText = `$${deudaTotal.toFixed(2)}`;
-
-            if (proximosPagos.length > 0) {
-                proximosPagos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-                let prox = proximosPagos[0];
-                let dateFormatted = new Date(prox.fecha + 'T00:00:00').toLocaleDateString('es-VE');
-                document.getElementById('cashea-proximo-pago').innerText = `Próximo pago: $${prox.monto.toFixed(2)} (${prox.producto}) el ${dateFormatted}`;
-            } else {
-                document.getElementById('cashea-proximo-pago').innerText = `¡Al día! No tienes cuotas pendientes.`;
-            }
-        }
-
-        /* --- UTILIDADES --- */
-        function exportarDatos() {
-            navigator.clipboard.writeText(JSON.stringify(datos));
-            alert("Respaldo copiado al portapapeles. Puedes pegarlo en un lugar seguro.");
-        }
-
-        function borrarTodo() {
-            if (confirm("¿Estás seguro de restablecer todos los datos? Esta acción no se puede deshacer.")) {
-                localStorage.removeItem('mis_finanzas_pro_v4');
-                location.reload();
-            }
-        }
-    </script>
+  </div>
+
+  <script>
+    // Cargar o inicializar datos
+    let saldos = JSON.parse(localStorage.getItem('saldos')) || {
+      efectivo_usd: 0,
+      efectivo_bs: 0,
+      binance: 0,
+      bdv: 0
+    };
+
+    let historial = JSON.parse(localStorage.getItem('historial')) || [];
+
+    // Cambiar de Pestaña
+    function cambiarPestaña(pestana) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
+      
+      if(pestana === 'flujo') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('vista-flujo').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('vista-divisas').classList.add('active');
+      }
+    }
+
+    // Guardar Operación
+    function guardarMovimiento() {
+      const tipo = document.getElementById('tipo').value;
+      const cuenta = document.getElementById('cuenta').value;
+      const monto = parseFloat(document.getElementById('monto').value);
+      const descripcion = document.getElementById('descripcion').value || 'Sin descripción';
+
+      if (isNaN(monto) || monto <= 0) {
+        alert("Por favor ingresa un monto válido.");
+        return;
+      }
+
+      // Actualizar Saldo
+      if (tipo === 'ingreso') {
+        saldos[cuenta] += monto;
+      } else {
+        saldos[cuenta] -= monto;
+      }
+
+      // Guardar en Historial
+      historial.unshift({
+        tipo,
+        cuenta,
+        monto,
+        descripcion,
+        fecha: new Date().toLocaleDateString()
+      });
+
+      // Guardar en almacenamiento del navegador
+      localStorage.setItem('saldos', JSON.stringify(saldos));
+      localStorage.setItem('historial', JSON.stringify(historial));
+
+      // Limpiar campos y actualizar interfaz
+      document.getElementById('monto').value = '';
+      document.getElementById('descripcion').value = '';
+      actualizarInterfaz();
+    }
+
+    // Actualizar Vistas y Totales
+    function actualizarInterfaz() {
+      // Mostrar Saldos por Cuenta
+      document.getElementById('saldo-efectivo_usd').value = `$${saldos.efectivo_usd.toFixed(2)}`;
+      document.getElementById('saldo-efectivo_bs').value = `Bs. ${saldos.efectivo_bs.toFixed(2)}`;
+      document.getElementById('saldo-binance').value = `${saldos.binance.toFixed(2)} USDT`;
+      document.getElementById('saldo-bdv').value = `Bs. ${saldos.bdv.toFixed(2)}`;
+
+      // Calcular Patrimonio Total en USD
+      const totalUSD = saldos.efectivo_usd + saldos.binance;
+      document.getElementById('patrimonioTotal').innerText = `$${totalUSD.toFixed(2)}`;
+
+      // Renderizar Historial
+      const contenedor = document.getElementById('listaHistorial');
+      if (historial.length === 0) {
+        contenedor.innerHTML = '<p style="color: #8899a6; font-size: 12px; text-align: center;">No hay movimientos registrados</p>';
+        return;
+      }
+
+      contenedor.innerHTML = '';
+      historial.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item-movimiento';
+        const signo = item.tipo === 'ingreso' ? '+' : '-';
+        const claseColor = item.tipo === 'ingreso' ? 'ingreso' : 'egreso';
+        
+        div.innerHTML = `
+          <div>
+            <strong>${item.descripcion}</strong><br>
+            <small style="color: #8899a6;">${item.cuenta.toUpperCase()} • ${item.fecha}</small>
+          </div>
+          <div class="${claseColor}">
+            ${signo}${item.monto.toFixed(2)}
+          </div>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    // Inicializar al cargar la página
+    actualizarInterfaz();
+  </script>
 </body>
 </html>
