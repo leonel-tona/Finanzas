@@ -8,23 +8,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #0b101d; color: #ffffff; padding: 12px; }
     
-    /* Header Patrimonio */
     .header-card { background: #070a14; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 12px; border: 1px solid #1a233a; }
     .header-card h2 { font-size: 10px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; }
-    .header-card .total { font-size: 24px; font-weight: bold; color: #00d2ff; margin: 4px 0; }
+    .header-card .total { font-size: 22px; font-weight: bold; color: #00d2ff; margin: 4px 0; }
     .header-card .subtotal { font-size: 13px; color: #10b981; }
 
-    /* Tasas de Cambio */
     .tasas-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .tasa-box { flex: 1; background: #111827; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
-    .tasa-box input { width: 50px; background: #030712; border: 1px solid #374151; color: #fff; padding: 3px; border-radius: 4px; text-align: center; font-size: 11px; }
+    .tasa-box input { width: 60px; background: #030712; border: 1px solid #374151; color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: bold; }
 
-    /* Navegación por Pestañas */
     .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
     .tab-btn { flex: 1; padding: 8px 4px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
     .tab-btn.active { background: #1f2937; color: #ffffff; }
 
-    /* Cards y Formulario */
     .card { background: #111827; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #1f2937; }
     .card h3 { font-size: 14px; margin-bottom: 10px; color: #f3f4f6; }
     
@@ -35,7 +31,6 @@
     .btn-submit { width: 100%; padding: 10px; background: #10b981; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer; }
     .btn-submit:active { background: #059669; }
 
-    /* Lista Historial */
     .item-mov { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 12px; }
     .ingreso { color: #10b981; }
     .egreso { color: #ef4444; }
@@ -57,11 +52,11 @@
   <div class="tasas-bar">
     <div class="tasa-box">
       <span>Tasa USD ($):</span>
-      <input type="number" id="tasaUSD" value="1" onchange="actualizarInterfaz()">
+      <input type="number" id="tasaUSD" value="1" step="0.01" onchange="guardarTasas()">
     </div>
     <div class="tasa-box">
       <span>Tasa EUR (€):</span>
-      <input type="number" id="tasaEUR" value="1" onchange="actualizarInterfaz()">
+      <input type="number" id="tasaEUR" value="1" step="0.01" onchange="guardarTasas()">
     </div>
   </div>
 
@@ -92,6 +87,8 @@
           <option value="efectivo_bs">Efectivo (Bs.)</option>
           <option value="binance">Binance (USDT)</option>
           <option value="bdv">Banco de Venezuela (BDV)</option>
+          <option value="cashea_pago">Pago Cuota Cashea</option>
+          <option value="cashea_compra">Compra Cashea (Inicial/Total)</option>
         </select>
       </div>
       <div class="form-group">
@@ -100,7 +97,7 @@
       </div>
       <div class="form-group">
         <label>Descripción</label>
-        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Servicios...">
+        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Cuota Cashea...">
       </div>
       <button class="btn-submit" onclick="guardarMovimiento()">Guardar Movimiento</button>
     </div>
@@ -141,16 +138,23 @@
   <!-- Vista: Cashea -->
   <div id="tab-cashea" class="tab-content">
     <div class="card">
-      <h3>Gestión de Cashea</h3>
+      <h3>Configurar Límites de Cashea</h3>
       <div class="form-group">
-        <label>Límite Disponible ($)</label>
-        <input type="number" id="casheaDisponible" class="form-control" placeholder="0.00">
+        <label>Límite Total / Aprobado ($)</label>
+        <input type="number" id="casheaTotal" class="form-control" placeholder="0.00" onchange="guardarConfigCashea()">
       </div>
       <div class="form-group">
         <label>Deuda / Cuotas Pendientes ($)</label>
-        <input type="number" id="casheaDeuda" class="form-control" placeholder="0.00">
+        <input type="number" id="casheaDeuda" class="form-control" placeholder="0.00" onchange="guardarConfigCashea()">
       </div>
-      <button class="btn-submit" onclick="guardarCashea()">Actualizar Cashea</button>
+    </div>
+
+    <div class="card">
+      <h3>Estado de Cashea</h3>
+      <div class="form-group">
+        <label>Límite Disponible ($)</label>
+        <input type="text" id="casheaDisponible" class="form-control" readonly>
+      </div>
     </div>
   </div>
 
@@ -163,16 +167,39 @@
   </div>
 
   <script>
-    let saldos = JSON.parse(localStorage.getItem('saldos_v4')) || {
-      efectivo_usd: 0, efectivo_eur: 0, binance: 0, bdv: 0, efectivo_bs: 0, cashea_disp: 0, cashea_deuda: 0
+    // Cargar datos persistentes
+    let saldos = JSON.parse(localStorage.getItem('saldos_v41')) || {
+      efectivo_usd: 0, efectivo_eur: 0, binance: 0, bdv: 0, efectivo_bs: 0
     };
-    let historial = JSON.parse(localStorage.getItem('historial_v4')) || [];
+    let cashea = JSON.parse(localStorage.getItem('cashea_v41')) || { total: 0, deuda: 0 };
+    let tasas = JSON.parse(localStorage.getItem('tasas_v41')) || { usd: 1, eur: 1 };
+    let historial = JSON.parse(localStorage.getItem('historial_v41')) || [];
+
+    // Cargar valores iniciales en los inputs
+    document.getElementById('tasaUSD').value = tasas.usd;
+    document.getElementById('tasaEUR').value = tasas.eur;
+    document.getElementById('casheaTotal').value = cashea.total;
+    document.getElementById('casheaDeuda').value = cashea.deuda;
 
     function verTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       event.target.classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function guardarTasas() {
+      tasas.usd = parseFloat(document.getElementById('tasaUSD').value) || 1;
+      tasas.eur = parseFloat(document.getElementById('tasaEUR').value) || 1;
+      localStorage.setItem('tasas_v41', JSON.stringify(tasas));
+      actualizarInterfaz();
+    }
+
+    function guardarConfigCashea() {
+      cashea.total = parseFloat(document.getElementById('casheaTotal').value) || 0;
+      cashea.deuda = parseFloat(document.getElementById('casheaDeuda').value) || 0;
+      localStorage.setItem('cashea_v41', JSON.stringify(cashea));
+      actualizarInterfaz();
     }
 
     function guardarMovimiento() {
@@ -183,25 +210,25 @@
 
       if (isNaN(monto) || monto <= 0) return alert('Ingresa un monto válido');
 
-      saldos[cuenta] += (tipo === 'ingreso' ? monto : -monto);
+      if (cuenta === 'cashea_pago') {
+        cashea.deuda = Math.max(0, cashea.deuda - monto);
+      } else if (cuenta === 'cashea_compra') {
+        cashea.deuda += monto;
+      } else {
+        saldos[cuenta] += (tipo === 'ingreso' ? monto : -monto);
+      }
+
       historial.unshift({ tipo, cuenta, monto, desc, fecha: new Date().toLocaleDateString() });
 
-      guardarLocal();
+      localStorage.setItem('saldos_v41', JSON.stringify(saldos));
+      localStorage.setItem('cashea_v41', JSON.stringify(cashea));
+      localStorage.setItem('historial_v41', JSON.stringify(historial));
+
       document.getElementById('monto').value = '';
       document.getElementById('descripcion').value = '';
+      document.getElementById('casheaDeuda').value = cashea.deuda;
+      
       actualizarInterfaz();
-    }
-
-    function guardarCashea() {
-      saldos.cashea_disp = parseFloat(document.getElementById('casheaDisponible').value) || 0;
-      saldos.cashea_deuda = parseFloat(document.getElementById('casheaDeuda').value) || 0;
-      guardarLocal();
-      alert('Cashea actualizado');
-    }
-
-    function guardarLocal() {
-      localStorage.setItem('saldos_v4', JSON.stringify(saldos));
-      localStorage.setItem('historial_v4', JSON.stringify(historial));
     }
 
     function actualizarInterfaz() {
@@ -211,25 +238,27 @@
       document.getElementById('s-bdv').value = `Bs. ${saldos.bdv.toFixed(2)}`;
       document.getElementById('s-efectivo_bs').value = `Bs. ${saldos.efectivo_bs.toFixed(2)}`;
 
-      const tUSD = parseFloat(document.getElementById('tasaUSD').value) || 1;
-      const totalUSD = saldos.efectivo_usd + saldos.binance + (saldos.bdv + saldos.efectivo_bs) / tUSD;
+      const dispCashea = Math.max(0, cashea.total - cashea.deuda);
+      document.getElementById('casheaDisponible').value = `$${dispCashea.toFixed(2)}`;
+
+      const totalUSD = saldos.efectivo_usd + saldos.binance + (saldos.bdv + saldos.efectivo_bs) / tasas.usd;
       
       document.getElementById('patrimonioUSD').innerText = `$${totalUSD.toFixed(2)} / €${saldos.efectivo_eur.toFixed(2)}`;
-      document.getElementById('patrimonioBS').innerText = `Bs. ${(totalUSD * tUSD).toFixed(2)}`;
+      document.getElementById('patrimonioBS').innerText = `Bs. ${(totalUSD * tasas.usd).toFixed(2)}`;
 
       const hist = document.getElementById('listaHistorial');
       if (!historial.length) return hist.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>';
       
       hist.innerHTML = historial.map(i => `
         <div class="item-mov">
-          <div><strong>${i.desc}</strong><br><small style="color:#6b7280;">${i.cuenta.toUpperCase()} • ${i.fecha}</small></div>
+          <div><strong>${i.desc}</strong><br><small style="color:#6b7280;">${i.cuenta.replace('_', ' ').toUpperCase()} • ${i.fecha}</small></div>
           <div class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}${i.monto.toFixed(2)}</div>
         </div>
       `).join('');
     }
 
     function borrarTodo() {
-      if(confirm('¿Seguro que deseas reiniciar los datos?')) {
+      if(confirm('¿Seguro que deseas reiniciar todos los datos?')) {
         localStorage.clear();
         location.reload();
       }
