@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis Finanzas PRO v4.1</title>
+  <title>Mis Finanzas PRO</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #0b101d; color: #ffffff; padding: 12px; }
@@ -15,10 +15,10 @@
 
     .tasas-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .tasa-box { flex: 1; background: #111827; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
-    .tasa-box input { width: 60px; background: #030712; border: 1px solid #374151; color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: bold; }
+    .tasa-box input { width: 65px; background: #030712; border: 1px solid #374151; color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: bold; }
 
-    .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 8px 4px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
+    .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; overflow-x: auto; }
+    .tab-btn { flex: 1; min-width: 60px; padding: 8px 4px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
     .tab-btn.active { background: #1f2937; color: #ffffff; }
 
     .card { background: #111827; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #1f2937; }
@@ -31,9 +31,10 @@
     .btn-submit { width: 100%; padding: 10px; background: #10b981; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer; }
     .btn-submit:active { background: #059669; }
 
-    .item-mov { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 12px; }
+    .item-mov { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 12px; }
     .ingreso { color: #10b981; }
     .egreso { color: #ef4444; }
+    .btn-del { background: #ef4444; color: white; border: none; padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; margin-left: 8px; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -41,31 +42,32 @@
 </head>
 <body>
 
-  <!-- Cabecera -->
+  <!-- Cabecera de Patrimonio -->
   <div class="header-card">
     <h2>Patrimonio Total Estimado</h2>
     <div class="total" id="patrimonioUSD">$0.00 / €0.00</div>
     <div class="subtotal" id="patrimonioBS">Bs. 0,00</div>
   </div>
 
-  <!-- Tasas de Cambio -->
+  <!-- Barra de Tasas Guardadas -->
   <div class="tasas-bar">
     <div class="tasa-box">
       <span>Tasa USD ($):</span>
-      <input type="number" id="tasaUSD" value="1" step="0.01" onchange="guardarTasas()">
+      <input type="number" id="tasaUSD" value="0" step="0.01" onkeyup="guardarTasas()" onchange="guardarTasas()">
     </div>
     <div class="tasa-box">
       <span>Tasa EUR (€):</span>
-      <input type="number" id="tasaEUR" value="1" step="0.01" onchange="guardarTasas()">
+      <input type="number" id="tasaEUR" value="0" step="0.01" onkeyup="guardarTasas()" onchange="guardarTasas()">
     </div>
   </div>
 
-  <!-- Pestañas -->
+  <!-- Navegación por Pestañas Original -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="verTab('flujo')">Flujo</button>
-    <button class="tab-btn" onclick="verTab('divisas')">Divisas</button>
-    <button class="tab-btn" onclick="verTab('cashea')">Cashea</button>
-    <button class="tab-btn" onclick="verTab('ajustes')">Ajustes</button>
+    <button class="tab-btn active" onclick="verTab('flujo', this)">Flujo</button>
+    <button class="tab-btn" onclick="verTab('divisas', this)">Divisas</button>
+    <button class="tab-btn" onclick="verTab('cashea', this)">Cashea</button>
+    <button class="tab-btn" onclick="verTab('uni', this)">Uni</button>
+    <button class="tab-btn" onclick="verTab('ajustes', this)">Ajustes</button>
   </div>
 
   <!-- Vista: Flujo -->
@@ -87,8 +89,6 @@
           <option value="efectivo_bs">Efectivo (Bs.)</option>
           <option value="binance">Binance (USDT)</option>
           <option value="bdv">Banco de Venezuela (BDV)</option>
-          <option value="cashea_pago">Pago Cuota Cashea</option>
-          <option value="cashea_compra">Compra Cashea (Inicial/Total)</option>
         </select>
       </div>
       <div class="form-group">
@@ -97,40 +97,42 @@
       </div>
       <div class="form-group">
         <label>Descripción</label>
-        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Cuota Cashea...">
+        <input type="text" id="descripcion" class="form-control" placeholder="Ej. Sueldo, Mercado...">
       </div>
       <button class="btn-submit" onclick="guardarMovimiento()">Guardar Movimiento</button>
     </div>
 
     <div class="card">
       <h3>Historial</h3>
-      <div id="listaHistorial"><p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p></div>
+      <div id="listaHistorial">
+        <p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>
+      </div>
     </div>
   </div>
 
-  <!-- Vista: Divisas / Cuentas -->
+  <!-- Vista: Divisas -->
   <div id="tab-divisas" class="tab-content">
     <div class="card">
-      <h3>Cuentas y Efectivo</h3>
+      <h3>Saldos por Cuenta</h3>
       <div class="form-group">
         <label>Efectivo USD ($)</label>
-        <input type="text" id="s-efectivo_usd" class="form-control" readonly>
+        <input type="text" id="s-efectivo_usd" class="form-control" readonly value="$0.00">
       </div>
       <div class="form-group">
         <label>Efectivo EUR (€)</label>
-        <input type="text" id="s-efectivo_eur" class="form-control" readonly>
+        <input type="text" id="s-efectivo_eur" class="form-control" readonly value="€0.00">
       </div>
       <div class="form-group">
         <label>Binance (USDT)</label>
-        <input type="text" id="s-binance" class="form-control" readonly>
+        <input type="text" id="s-binance" class="form-control" readonly value="0.00 USDT">
       </div>
       <div class="form-group">
-        <label>Bolívares / Banco (BDV)</label>
-        <input type="text" id="s-bdv" class="form-control" readonly>
+        <label>Banco de Venezuela (BDV)</label>
+        <input type="text" id="s-bdv" class="form-control" readonly value="Bs. 0,00">
       </div>
       <div class="form-group">
-        <label>Bolívares Efectivo</label>
-        <input type="text" id="s-efectivo_bs" class="form-control" readonly>
+        <label>Efectivo (Bs.)</label>
+        <input type="text" id="s-efectivo_bs" class="form-control" readonly value="Bs. 0,00">
       </div>
     </div>
   </div>
@@ -138,23 +140,27 @@
   <!-- Vista: Cashea -->
   <div id="tab-cashea" class="tab-content">
     <div class="card">
-      <h3>Configurar Límites de Cashea</h3>
+      <h3>Control de Cashea</h3>
       <div class="form-group">
-        <label>Límite Total / Aprobado ($)</label>
-        <input type="number" id="casheaTotal" class="form-control" placeholder="0.00" onchange="guardarConfigCashea()">
+        <label>Límite Aprobado ($)</label>
+        <input type="number" id="casheaTotal" class="form-control" placeholder="0.00" onkeyup="guardarCashea()" onchange="guardarCashea()">
       </div>
       <div class="form-group">
-        <label>Deuda / Cuotas Pendientes ($)</label>
-        <input type="number" id="casheaDeuda" class="form-control" placeholder="0.00" onchange="guardarConfigCashea()">
+        <label>Deuda Pendiente ($)</label>
+        <input type="number" id="casheaDeuda" class="form-control" placeholder="0.00" onkeyup="guardarCashea()" onchange="guardarCashea()">
+      </div>
+      <div class="form-group">
+        <label>Límite Disponible Estimado ($)</label>
+        <input type="text" id="casheaDisponible" class="form-control" readonly value="$0.00">
       </div>
     </div>
+  </div>
 
+  <!-- Vista: Uni -->
+  <div id="tab-uni" class="tab-content">
     <div class="card">
-      <h3>Estado de Cashea</h3>
-      <div class="form-group">
-        <label>Límite Disponible ($)</label>
-        <input type="text" id="casheaDisponible" class="form-control" readonly>
-      </div>
+      <h3>Universidad / Control Académico</h3>
+      <p style="color: #6b7280; font-size: 12px;">Sección reservada para pagos de matrículas, impresiones o gastos académicos.</p>
     </div>
   </div>
 
@@ -162,44 +168,40 @@
   <div id="tab-ajustes" class="tab-content">
     <div class="card">
       <h3>Configuración</h3>
-      <button class="btn-submit" style="background: #ef4444;" onclick="borrarTodo()">Restablecer Todo</button>
+      <button class="btn-submit" style="background: #ef4444;" onclick="borrarTodo()">Restablecer Todos los Datos</button>
     </div>
   </div>
 
   <script>
-    // Cargar datos persistentes
-    let saldos = JSON.parse(localStorage.getItem('saldos_v41')) || {
-      efectivo_usd: 0, efectivo_eur: 0, binance: 0, bdv: 0, efectivo_bs: 0
-    };
-    let cashea = JSON.parse(localStorage.getItem('cashea_v41')) || { total: 0, deuda: 0 };
-    let tasas = JSON.parse(localStorage.getItem('tasas_v41')) || { usd: 1, eur: 1 };
-    let historial = JSON.parse(localStorage.getItem('historial_v41')) || [];
+    let saldos = JSON.parse(localStorage.getItem('f_saldos')) || { efectivo_usd: 0, efectivo_eur: 0, binance: 0, bdv: 0, efectivo_bs: 0 };
+    let cashea = JSON.parse(localStorage.getItem('f_cashea')) || { total: 0, deuda: 0 };
+    let tasas = JSON.parse(localStorage.getItem('f_tasas')) || { usd: 0, eur: 0 };
+    let historial = JSON.parse(localStorage.getItem('f_historial')) || [];
 
-    // Cargar valores iniciales en los inputs
     document.getElementById('tasaUSD').value = tasas.usd;
     document.getElementById('tasaEUR').value = tasas.eur;
     document.getElementById('casheaTotal').value = cashea.total;
     document.getElementById('casheaDeuda').value = cashea.deuda;
 
-    function verTab(tab) {
+    function verTab(tab, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
+      btn.classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
     }
 
     function guardarTasas() {
-      tasas.usd = parseFloat(document.getElementById('tasaUSD').value) || 1;
-      tasas.eur = parseFloat(document.getElementById('tasaEUR').value) || 1;
-      localStorage.setItem('tasas_v41', JSON.stringify(tasas));
-      actualizarInterfaz();
+      tasas.usd = parseFloat(document.getElementById('tasaUSD').value) || 0;
+      tasas.eur = parseFloat(document.getElementById('tasaEUR').value) || 0;
+      localStorage.setItem('f_tasas', JSON.stringify(tasas));
+      render();
     }
 
-    function guardarConfigCashea() {
+    function guardarCashea() {
       cashea.total = parseFloat(document.getElementById('casheaTotal').value) || 0;
       cashea.deuda = parseFloat(document.getElementById('casheaDeuda').value) || 0;
-      localStorage.setItem('cashea_v41', JSON.stringify(cashea));
-      actualizarInterfaz();
+      localStorage.setItem('f_cashea', JSON.stringify(cashea));
+      render();
     }
 
     function guardarMovimiento() {
@@ -208,63 +210,91 @@
       const monto = parseFloat(document.getElementById('monto').value);
       const desc = document.getElementById('descripcion').value || 'Sin descripción';
 
-      if (isNaN(monto) || monto <= 0) return alert('Ingresa un monto válido');
+      if (isNaN(monto) || monto <= 0) return alert('Por favor ingresa un monto válido');
 
-      if (cuenta === 'cashea_pago') {
-        cashea.deuda = Math.max(0, cashea.deuda - monto);
-      } else if (cuenta === 'cashea_compra') {
-        cashea.deuda += monto;
+      if (tipo === 'ingreso') {
+        saldos[cuenta] += monto;
       } else {
-        saldos[cuenta] += (tipo === 'ingreso' ? monto : -monto);
+        saldos[cuenta] -= monto;
       }
 
-      historial.unshift({ tipo, cuenta, monto, desc, fecha: new Date().toLocaleDateString() });
+      historial.unshift({ id: Date.now(), tipo, cuenta, monto, desc, fecha: new Date().toLocaleDateString() });
 
-      localStorage.setItem('saldos_v41', JSON.stringify(saldos));
-      localStorage.setItem('cashea_v41', JSON.stringify(cashea));
-      localStorage.setItem('historial_v41', JSON.stringify(historial));
-
+      guardarStorage();
       document.getElementById('monto').value = '';
       document.getElementById('descripcion').value = '';
-      document.getElementById('casheaDeuda').value = cashea.deuda;
-      
-      actualizarInterfaz();
+      render();
     }
 
-    function actualizarInterfaz() {
+    function eliminarMovimiento(id) {
+      const idx = historial.findIndex(item => item.id === id);
+      if (idx !== -1) {
+        const item = historial[idx];
+        if (item.tipo === 'ingreso') {
+          saldos[item.cuenta] -= item.monto;
+        } else {
+          saldos[item.cuenta] += item.monto;
+        }
+        historial.splice(idx, 1);
+        guardarStorage();
+        render();
+      }
+    }
+
+    function guardarStorage() {
+      localStorage.setItem('f_saldos', JSON.stringify(saldos));
+      localStorage.setItem('f_historial', JSON.stringify(historial));
+    }
+
+    function render() {
+      // Divisas y Saldos
       document.getElementById('s-efectivo_usd').value = `$${saldos.efectivo_usd.toFixed(2)}`;
       document.getElementById('s-efectivo_eur').value = `€${saldos.efectivo_eur.toFixed(2)}`;
       document.getElementById('s-binance').value = `${saldos.binance.toFixed(2)} USDT`;
       document.getElementById('s-bdv').value = `Bs. ${saldos.bdv.toFixed(2)}`;
       document.getElementById('s-efectivo_bs').value = `Bs. ${saldos.efectivo_bs.toFixed(2)}`;
 
+      // Cashea
       const dispCashea = Math.max(0, cashea.total - cashea.deuda);
       document.getElementById('casheaDisponible').value = `$${dispCashea.toFixed(2)}`;
 
-      const totalUSD = saldos.efectivo_usd + saldos.binance + (saldos.bdv + saldos.efectivo_bs) / tasas.usd;
-      
-      document.getElementById('patrimonioUSD').innerText = `$${totalUSD.toFixed(2)} / €${saldos.efectivo_eur.toFixed(2)}`;
-      document.getElementById('patrimonioBS').innerText = `Bs. ${(totalUSD * tasas.usd).toFixed(2)}`;
+      // Totales
+      const bsEnUSD = tasas.usd > 0 ? (saldos.bdv + saldos.efectivo_bs) / tasas.usd : 0;
+      const totalUSD = saldos.efectivo_usd + saldos.binance + bsEnUSD;
+      const totalBS = totalUSD * tasas.usd;
 
-      const hist = document.getElementById('listaHistorial');
-      if (!historial.length) return hist.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>';
-      
-      hist.innerHTML = historial.map(i => `
+      document.getElementById('patrimonioUSD').innerText = `$${totalUSD.toFixed(2)} / €${saldos.efectivo_eur.toFixed(2)}`;
+      document.getElementById('patrimonioBS').innerText = `Bs. ${totalBS.toFixed(2)}`;
+
+      // Historial
+      const histDiv = document.getElementById('listaHistorial');
+      if (historial.length === 0) {
+        histDiv.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>';
+        return;
+      }
+
+      histDiv.innerHTML = historial.map(i => `
         <div class="item-mov">
-          <div><strong>${i.desc}</strong><br><small style="color:#6b7280;">${i.cuenta.replace('_', ' ').toUpperCase()} • ${i.fecha}</small></div>
-          <div class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}${i.monto.toFixed(2)}</div>
+          <div>
+            <strong>${i.desc}</strong><br>
+            <small style="color:#6b7280;">${i.cuenta.replace('_', ' ').toUpperCase()} • ${i.fecha}</small>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <span class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}${i.monto.toFixed(2)}</span>
+            <button class="btn-del" onclick="eliminarMovimiento(${i.id})">X</button>
+          </div>
         </div>
       `).join('');
     }
 
     function borrarTodo() {
-      if(confirm('¿Seguro que deseas reiniciar todos los datos?')) {
+      if (confirm('¿Seguro que deseas eliminar todos los datos grabados?')) {
         localStorage.clear();
         location.reload();
       }
     }
 
-    actualizarInterfaz();
+    render();
   </script>
 </body>
 </html>
