@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -9,13 +9,13 @@
     body { background: #f4f6f8; color: #333; padding-bottom: 30px; }
     header { background: #1a2530; color: white; text-align: center; padding: 15px; font-size: 1.2rem; font-weight: bold; }
     
-    /* PANEL DE SALDO TOTAL */
     .dashboard { background: #0f172a; color: white; padding: 15px; text-align: center; border-bottom: 2px solid #38bdf8; }
     .dash-title { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; }
     .dash-amount { font-size: 1.8rem; font-weight: bold; color: #38bdf8; margin: 4px 0; }
     .dash-sub { font-size: 0.9rem; color: #4ade80; font-weight: 500; }
 
-    .tasa-bar { background: #1e293b; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+    .tasa-bar { background: #1e293b; color: white; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; }
+    .tasa-row { display: flex; justify-content: space-between; align-items: center; }
     .tasa-bar input { width: 90px; padding: 4px 8px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #fff; text-align: right; font-weight: bold; }
     
     .nav-tabs { display: flex; background: #2c3e50; overflow-x: auto; }
@@ -33,13 +33,16 @@
     
     button.btn-add { background: #22c55e; color: white; font-weight: bold; border: none; margin-top: 12px; cursor: pointer; }
     button.btn-export { background: #6366f1; color: white; font-weight: bold; border: none; margin-top: 10px; cursor: pointer; }
-    button.btn-del { background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; width: auto; margin-left: 8px; }
+    button.btn-del { background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; width: auto; margin-left: 5px; }
+    button.btn-action { background: #3b82f6; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; width: auto; margin-top: 5px; cursor: pointer; }
     
     .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-    .sub-text { font-size: 0.75rem; color: #64748b; display: block; }
+    .sub-text { font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px; }
     .bs-text { font-size: 0.75rem; color: #16a34a; font-weight: bold; }
     
     .tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .tag-usd { background: #dbeafe; color: #1e40af; }
+    .tag-eur { background: #fef3c7; color: #92400e; }
     .tag-binance { background: #fef08a; color: #854d0e; }
     .tag-bdv { background: #fecdd3; color: #9f1239; }
     .tag-efectivo { background: #dcfce7; color: #166534; }
@@ -48,19 +51,22 @@
 </head>
 <body>
 
-  <header>Mis Finanzas PRO</header>
+  <header>Mis Finanzas PRO v4.0</header>
 
-  <!-- RESUMEN TOTAL DE PATRIMONIO -->
   <div class="dashboard">
     <div class="dash-title">Patrimonio Total en Divisas</div>
-    <div class="dash-amount" id="total-usd">$0.00</div>
+    <div class="dash-amount" id="total-usd">$0.00 / €0.00</div>
     <div class="dash-sub" id="total-bs">Bs. 0.00</div>
   </div>
 
   <div class="tasa-bar">
-    <span>Tasa Bs. / USD:</span>
-    <div>
-      <input type="number" id="tasa-cambio" value="0.00" step="0.01" onchange="guardarTasa()">
+    <div class="tasa-row">
+      <span>Tasa Bs. / USD ($):</span>
+      <input type="number" id="tasa-usd" value="0.00" step="0.01" onchange="guardarTasas()">
+    </div>
+    <div class="tasa-row">
+      <span>Tasa Bs. / EUR (€):</span>
+      <input type="number" id="tasa-eur" value="0.00" step="0.01" onchange="guardarTasas()">
     </div>
   </div>
 
@@ -72,7 +78,6 @@
     <button class="tab-btn" onclick="switchTab('ajustes', event)">Ajustes</button>
   </div>
 
-  <!-- PESTAÑA 1: INGRESOS Y EGRESOS -->
   <div id="flujo" class="content active">
     <div class="card">
       <h3>Registrar Movimiento</h3>
@@ -81,7 +86,12 @@
         <option value="Ingreso">Ingreso (+)</option>
         <option value="Egreso">Egreso (-)</option>
       </select>
-      <label>Monto ($)</label>
+      <label>Moneda</label>
+      <select id="flujo-moneda">
+        <option value="USD">Dólares ($)</option>
+        <option value="EUR">Euros (€)</option>
+      </select>
+      <label>Monto</label>
       <input type="number" id="flujo-monto" placeholder="0.00" step="0.01">
       <label>Descripción</label>
       <input type="text" id="flujo-desc" placeholder="Ej. Sueldo, Mercado...">
@@ -93,17 +103,17 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 2: DIVISAS -->
   <div id="divisas" class="content">
     <div class="card">
       <h3>Compra / Saldo de Divisas</h3>
       <label>Plataforma / Cuenta</label>
       <select id="divisa-origen">
         <option value="Binance">Binance (USDT)</option>
-        <option value="Efectivo">Efectivo ($)</option>
+        <option value="Efectivo USD">Efectivo ($)</option>
+        <option value="Efectivo EUR">Efectivo (€)</option>
         <option value="BDV">BDV (USD / Bs)</option>
       </select>
-      <label>Monto ($)</label>
+      <label>Monto</label>
       <input type="number" id="divisa-monto" placeholder="0.00" step="0.01">
       <button class="btn-add" onclick="addDivisa()">Registrar Divisa</button>
     </div>
@@ -113,31 +123,36 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 3: CASHEA -->
   <div id="cashea" class="content">
     <div class="card">
       <h3>Nueva Compra Cashea</h3>
       <label>Producto / Compra</label>
-      <input type="text" id="cashea-item" placeholder="Ej. Zapatos">
-      <label>Total Cuotas</label>
+      <input type="text" id="cashea-item" placeholder="Ej. Zapatos, Teléfono">
+      <label>Monto Total de la Compra ($)</label>
+      <input type="number" id="cashea-monto-total" placeholder="0.00" step="0.01">
+      <label>Número de Cuotas</label>
       <input type="number" id="cashea-cuotas" placeholder="Ej. 3 o 6">
-      <label>Monto por Cuota ($)</label>
-      <input type="number" id="cashea-monto" placeholder="0.00" step="0.01">
+      <label>Fecha de la 1ra Cuota / Compra</label>
+      <input type="date" id="cashea-fecha-inicio">
       <button class="btn-add" onclick="addCashea()">Guardar Compra</button>
     </div>
     <div class="card">
-      <h3>Control de Cuotas Pendientes</h3>
+      <h3>Control de Compras y Cuotas</h3>
       <div id="lista-cashea"></div>
     </div>
   </div>
 
-  <!-- PESTAÑA 4: UNIVERSIDAD -->
   <div id="uni" class="content">
     <div class="card">
       <h3>Registrar Gasto de Universidad</h3>
       <label>Concepto</label>
-      <input type="text" id="uni-desc" placeholder="Ej. Guías, Impresiones, Matrícula...">
-      <label>Monto ($)</label>
+      <input type="text" id="uni-desc" placeholder="Ej. Guías, Impresiones...">
+      <label>Moneda</label>
+      <select id="uni-moneda">
+        <option value="USD">Dólares ($)</option>
+        <option value="EUR">Euros (€)</option>
+      </select>
+      <label>Monto</label>
       <input type="number" id="uni-monto" placeholder="0.00" step="0.01">
       <button class="btn-add" onclick="addUniGasto()">Guardar Gasto Uni</button>
     </div>
@@ -162,19 +177,18 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 5: AJUSTES / EXPORTAR -->
   <div id="ajustes" class="content">
     <div class="card">
       <h3>Respaldar Datos</h3>
-      <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Copia un resumen completo de tus finanzas para guardarlo en tus notas o enviarlo por WhatsApp.</p>
+      <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Copia un resumen completo de tus finanzas para guardarlo o enviarlo.</p>
       <button class="btn-export" onclick="exportarTexto()">Copiar Resumen de Finanzas</button>
     </div>
   </div>
 
   <script>
-    // ESTADO DE LA APLICACIÓN
     let db = {
-      tasa: parseFloat(localStorage.getItem('finanzas_tasa')) || 0,
+      tasaUSD: parseFloat(localStorage.getItem('finanzas_tasa_usd')) || 0,
+      tasaEUR: parseFloat(localStorage.getItem('finanzas_tasa_eur')) || 0,
       flujo: JSON.parse(localStorage.getItem('finanzas_flujo')) || [],
       divisas: JSON.parse(localStorage.getItem('finanzas_divisas')) || [],
       cashea: JSON.parse(localStorage.getItem('finanzas_cashea')) || [],
@@ -182,11 +196,14 @@
       uniMaterias: JSON.parse(localStorage.getItem('finanzas_uni_materias')) || []
     };
 
-    document.getElementById('tasa-cambio').value = db.tasa;
+    document.getElementById('tasa-usd').value = db.tasaUSD;
+    document.getElementById('tasa-eur').value = db.tasaEUR;
 
-    function guardarTasa() {
-      db.tasa = parseFloat(document.getElementById('tasa-cambio').value) || 0;
-      localStorage.setItem('finanzas_tasa', db.tasa);
+    function guardarTasas() {
+      db.tasaUSD = parseFloat(document.getElementById('tasa-usd').value) || 0;
+      db.tasaEUR = parseFloat(document.getElementById('tasa-eur').value) || 0;
+      localStorage.setItem('finanzas_tasa_usd', db.tasaUSD);
+      localStorage.setItem('finanzas_tasa_eur', db.tasaEUR);
       renderAll();
     }
 
@@ -198,20 +215,26 @@
     }
 
     function calcularTotales() {
-      const totalUSD = db.divisas.reduce((sum, item) => sum + item.monto, 0);
-      const totalBS = totalUSD * db.tasa;
-      document.getElementById('total-usd').innerText = `$${totalUSD.toFixed(2)}`;
-      document.getElementById('total-bs').innerText = db.tasa ? `Bs. ${totalBS.toFixed(2)}` : 'Bs. 0.00';
+      let totalUSD = 0, totalEUR = 0;
+      db.divisas.forEach(item => {
+        if (item.origen.includes('EUR')) totalEUR += item.monto;
+        else totalUSD += item.monto;
+      });
+
+      const totalBS = (totalUSD * db.tasaUSD) + (totalEUR * db.tasaEUR);
+      document.getElementById('total-usd').innerText = `$${totalUSD.toFixed(2)} / €${totalEUR.toFixed(2)}`;
+      document.getElementById('total-bs').innerText = `Bs. ${totalBS.toFixed(2)}`;
     }
 
     // FLUJO
     function addFlujo() {
       const tipo = document.getElementById('flujo-tipo').value;
+      const moneda = document.getElementById('flujo-moneda').value;
       const monto = parseFloat(document.getElementById('flujo-monto').value);
       const desc = document.getElementById('flujo-desc').value;
       if (!monto || !desc) return alert('Completa los campos');
 
-      db.flujo.unshift({ id: Date.now(), tipo, monto, desc, fecha: new Date().toLocaleDateString() });
+      db.flujo.unshift({ id: Date.now(), tipo, moneda, monto, desc, fecha: new Date().toLocaleDateString() });
       saveAndRender('finanzas_flujo', db.flujo, renderFlujo);
       document.getElementById('flujo-monto').value = '';
       document.getElementById('flujo-desc').value = '';
@@ -221,17 +244,19 @@
       const el = document.getElementById('lista-flujo');
       el.innerHTML = '';
       db.flujo.forEach(item => {
-        const bs = (item.monto * db.tasa).toFixed(2);
+        const tasa = item.moneda === 'EUR' ? db.tasaEUR : db.tasaUSD;
+        const bs = (item.monto * tasa).toFixed(2);
         const color = item.tipo === 'Ingreso' ? '#16a34a' : '#dc2626';
+        const sim = item.moneda === 'EUR' ? '€' : '$';
         el.innerHTML += `
           <div class="list-item">
             <div>
               <b style="color:${color}">${item.tipo}:</b> ${item.desc}
-              <span class="sub-text">${item.fecha || ''}</span>
-              <span class="bs-text">${db.tasa ? 'Bs. ' + bs : ''}</span>
+              <span class="sub-text">${item.fecha || ''} <span class="tag ${item.moneda === 'EUR' ? 'tag-eur' : 'tag-usd'}">${item.moneda}</span></span>
+              <span class="bs-text">${tasa ? 'Bs. ' + bs : ''}</span>
             </div>
             <div>
-              <b>$${item.monto.toFixed(2)}</b>
+              <b>${sim}${item.monto.toFixed(2)}</b>
               <button class="btn-del" onclick="deleteItem('flujo', ${item.id})">X</button>
             </div>
           </div>`;
@@ -254,18 +279,26 @@
       el.innerHTML = '';
       db.divisas.forEach(item => {
         let tagClass = 'tag-efectivo';
+        let tasa = db.tasaUSD;
+        let sim = '$';
         if (item.origen === 'Binance') tagClass = 'tag-binance';
         if (item.origen === 'BDV') tagClass = 'tag-bdv';
-        const bs = (item.monto * db.tasa).toFixed(2);
+        if (item.origen.includes('EUR')) {
+          tagClass = 'tag-eur';
+          tasa = db.tasaEUR;
+          sim = '€';
+        }
+
+        const bs = (item.monto * tasa).toFixed(2);
 
         el.innerHTML += `
           <div class="list-item">
             <div>
               <span class="tag ${tagClass}">${item.origen}</span>
-              <span class="bs-text">${db.tasa ? 'Bs. ' + bs : ''}</span>
+              <span class="bs-text">${tasa ? 'Bs. ' + bs : ''}</span>
             </div>
             <div>
-              <b>$${item.monto.toFixed(2)}</b>
+              <b>${sim}${item.monto.toFixed(2)}</b>
               <button class="btn-del" onclick="deleteItem('divisas', ${item.id})">X</button>
             </div>
           </div>`;
@@ -275,33 +308,65 @@
     // CASHEA
     function addCashea() {
       const itemText = document.getElementById('cashea-item').value;
+      const montoTotal = parseFloat(document.getElementById('cashea-monto-total').value);
       const cuotas = parseInt(document.getElementById('cashea-cuotas').value);
-      const monto = parseFloat(document.getElementById('cashea-monto').value);
-      if (!itemText || !cuotas || !monto) return alert('Completa los datos');
+      const fechaInicio = document.getElementById('cashea-fecha-inicio').value;
 
-      db.cashea.unshift({ id: Date.now(), itemText, cuotas, pagadas: 0, monto, fecha: new Date().toLocaleDateString() });
+      if (!itemText || !montoTotal || !cuotas) return alert('Completa los datos de la compra');
+
+      db.cashea.unshift({
+        id: Date.now(),
+        itemText,
+        montoTotal,
+        cuotas,
+        pagadas: 0,
+        fechaInicio: fechaInicio || new Date().toISOString().split('T')[0]
+      });
+
       saveAndRender('finanzas_cashea', db.cashea, renderCashea);
       document.getElementById('cashea-item').value = '';
+      document.getElementById('cashea-monto-total').value = '';
       document.getElementById('cashea-cuotas').value = '';
-      document.getElementById('cashea-monto').value = '';
+      document.getElementById('cashea-fecha-inicio').value = '';
+    }
+
+    function cambiarCuota(id, delta) {
+      const item = db.cashea.find(i => i.id === id);
+      if (item) {
+        item.pagadas = Math.max(0, Math.min(item.cuotas, item.pagadas + delta));
+        saveAndRender('finanzas_cashea', db.cashea, renderCashea);
+      }
+    }
+
+    function calcularProximaFecha(fechaInicioStr, pagadas) {
+      if (!fechaInicioStr) return 'No especificada';
+      let fecha = new Date(fechaInicioStr);
+      fecha.setDate(fecha.getDate() + (pagadas * 14));
+      return fecha.toLocaleDateString();
     }
 
     function renderCashea() {
       const el = document.getElementById('lista-cashea');
       el.innerHTML = '';
       db.cashea.forEach(item => {
-        const bs = (item.monto * db.tasa).toFixed(2);
-        const completado = item.pagadas === item.cuotas;
+        const cuotaValor = item.montoTotal / item.cuotas;
+        const pendientes = item.cuotas - item.pagadas;
+        const completado = pendientes === 0;
+        const proxFecha = completado ? '¡Completado!' : calcularProximaFecha(item.fechaInicio, item.pagadas);
+        const bsCuota = (cuotaValor * db.tasaUSD).toFixed(2);
+
         el.innerHTML += `
-          <div class="list-item">
-            <div>
-              <b>${item.itemText}</b>
-              <span class="sub-text">Cuotas: ${item.pagadas}/${item.cuotas} ${completado ? '✅ Completo' : ''} (${item.fecha || ''})</span>
-              <span class="bs-text">${db.tasa ? 'Bs. ' + bs + ' /cuota' : ''}</span>
-            </div>
-            <div style="text-align:right">
-              <b>$${item.monto.toFixed(2)}</b>/cuota<br>
+          <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+            <div style="width:100%; display:flex; justify-content:space-between;">
+              <b>${item.itemText} Total: $${item.montoTotal.toFixed(2)}</b>
               <button class="btn-del" onclick="deleteItem('cashea', ${item.id})">X</button>
+            </div>
+            <span class="sub-text">Monto por cuota: <b>$${cuotaValor.toFixed(2)}</b> ${db.tasaUSD ? '(Bs. ' + bsCuota + ')' : ''}</span>
+            <span class="sub-text">Cuotas Pagadas: <b>${item.pagadas} / ${item.cuotas}</b> | Pendientes: <b style="color:${pendientes > 0 ? '#dc2626':'#16a34a'}">${pendientes}</b></span>
+            <span class="sub-text">Próximo Pago (c/14 días): <b>${proxFecha}</b></span>
+            <div style="margin-top:5px;">
+              <button class="btn-action" onclick="cambiarCuota(${item.id}, 1)">+1 Cuota Pagada</button>
+              <button class="btn-action" style="background:#64748b" onclick="cambiarCuota(${item.id}, -1)">-1</button>
             </div>
           </div>`;
       });
@@ -310,10 +375,11 @@
     // UNIVERSIDAD
     function addUniGasto() {
       const desc = document.getElementById('uni-desc').value;
+      const moneda = document.getElementById('uni-moneda').value;
       const monto = parseFloat(document.getElementById('uni-monto').value);
       if (!desc || !monto) return alert('Ingresa concepto y monto');
 
-      db.uniGastos.unshift({ id: Date.now(), desc, monto, fecha: new Date().toLocaleDateString() });
+      db.uniGastos.unshift({ id: Date.now(), desc, moneda, monto, fecha: new Date().toLocaleDateString() });
       saveAndRender('finanzas_uni_gastos', db.uniGastos, renderUni);
       document.getElementById('uni-desc').value = '';
       document.getElementById('uni-monto').value = '';
@@ -334,16 +400,18 @@
       const elG = document.getElementById('lista-uni-gastos');
       elG.innerHTML = '';
       db.uniGastos.forEach(item => {
-        const bs = (item.monto * db.tasa).toFixed(2);
+        const tasa = item.moneda === 'EUR' ? db.tasaEUR : db.tasaUSD;
+        const bs = (item.monto * tasa).toFixed(2);
+        const sim = item.moneda === 'EUR' ? '€' : '$';
         elG.innerHTML += `
           <div class="list-item">
             <div>
               <span class="tag tag-uni">Gasto</span> ${item.desc}
-              <span class="sub-text">${item.fecha || ''}</span>
-              <span class="bs-text">${db.tasa ? 'Bs. ' + bs : ''}</span>
+              <span class="sub-text">${item.fecha || ''} <span class="tag ${item.moneda === 'EUR' ? 'tag-eur' : 'tag-usd'}">${item.moneda}</span></span>
+              <span class="bs-text">${tasa ? 'Bs. ' + bs : ''}</span>
             </div>
             <div>
-              <b>$${item.monto.toFixed(2)}</b>
+              <b>${sim}${item.monto.toFixed(2)}</b>
               <button class="btn-del" onclick="deleteItem('uniGastos', ${item.id})">X</button>
             </div>
           </div>`;
@@ -368,16 +436,14 @@
     // EXPORTAR DATO
     function exportarTexto() {
       let texto = `📊 RESUMEN DE MIS FINANZAS PRO 📊\n`;
-      texto += `Tasa: Bs. ${db.tasa}\n\n`;
+      texto += `Tasa USD: Bs. ${db.tasaUSD} | Tasa EUR: Bs. ${db.tasaEUR}\n\n`;
       texto += `💵 DIVISAS:\n`;
-      db.divisas.forEach(d => texto += `- ${d.origen}: $${d.monto.toFixed(2)}\n`);
-      texto += `\n🛒 CASHEA PENDIENTES:\n`;
-      db.cashea.forEach(c => texto += `- ${c.itemText}: ${c.pagadas}/${c.cuotas} cuotas ($${c.monto}/cuota)\n`);
-      texto += `\n🎓 GASTOS UNIVERSIDAD:\n`;
-      db.uniGastos.forEach(u => texto += `- ${u.desc}: $${u.monto.toFixed(2)}\n`);
+      db.divisas.forEach(d => texto += `- ${d.origen}: ${d.origen.includes('EUR')?'€':'$'}${d.monto.toFixed(2)}\n`);
+      texto += `\n🛒 CASHEA:\n`;
+      db.cashea.forEach(c => texto += `- ${c.itemText}: Total $${c.montoTotal} (${c.pagadas}/${c.cuotas} cuotas)\n`);
       
       navigator.clipboard.writeText(texto);
-      alert('¡Resumen copiado al portapapeles! Puedes pegarlo en WhatsApp o tus Notas.');
+      alert('¡Resumen copiado al portapapeles!');
     }
 
     // AUXILIARES
@@ -408,9 +474,7 @@
       calcularTotales();
     }
 
-    // Inicializar al cargar
     renderAll();
   </script>
 </body>
 </html>
-
