@@ -6,34 +6,40 @@
   <title>Mis Finanzas PRO v4.1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: #121824; color: #ffffff; padding: 15px; }
+    body { background-color: #0b101d; color: #ffffff; padding: 12px; }
     
     /* Header Patrimonio */
-    .header-card { background: #0b111e; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 15px; }
-    .header-card h2 { font-size: 11px; text-transform: uppercase; color: #8899a6; letter-spacing: 1px; }
-    .header-card .total { font-size: 26px; font-weight: bold; color: #38ef7d; margin: 5px 0; }
+    .header-card { background: #070a14; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 12px; border: 1px solid #1a233a; }
+    .header-card h2 { font-size: 10px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; }
+    .header-card .total { font-size: 24px; font-weight: bold; color: #00d2ff; margin: 4px 0; }
+    .header-card .subtotal { font-size: 13px; color: #10b981; }
+
+    /* Tasas de Cambio */
+    .tasas-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tasa-box { flex: 1; background: #111827; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+    .tasa-box input { width: 50px; background: #030712; border: 1px solid #374151; color: #fff; padding: 3px; border-radius: 4px; text-align: center; font-size: 11px; }
 
     /* Navegación por Pestañas */
-    .nav-tabs { display: flex; border-bottom: 2px solid #1f293d; margin-bottom: 15px; }
-    .tab-btn { flex: 1; padding: 10px; background: none; border: none; color: #8899a6; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .tab-btn.active { color: #ffffff; border-bottom: 3px solid #00c6ff; }
+    .nav-tabs { display: flex; background: #111827; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 8px 4px; background: none; border: none; color: #9ca3af; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
+    .tab-btn.active { background: #1f2937; color: #ffffff; }
 
-    /* Formularios y Tarjetas */
-    .card { background: #1a2332; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-    .card h3 { font-size: 15px; margin-bottom: 12px; color: #e1e8ed; }
+    /* Cards y Formulario */
+    .card { background: #111827; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #1f2937; }
+    .card h3 { font-size: 14px; margin-bottom: 10px; color: #f3f4f6; }
     
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; color: #8899a6; margin-bottom: 4px; }
-    .form-control { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2c3e50; background: #0f172a; color: #fff; font-size: 14px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 11px; color: #9ca3af; margin-bottom: 3px; }
+    .form-control { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #374151; background: #030712; color: #fff; font-size: 13px; }
     
-    .btn-submit { width: 100%; padding: 12px; background: #10b981; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 15px; cursor: pointer; }
+    .btn-submit { width: 100%; padding: 10px; background: #10b981; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer; }
     .btn-submit:active { background: #059669; }
 
-    /* Lista del Historial */
-    .item-movimiento { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #273549; font-size: 13px; }
-    .ingreso { color: #38ef7d; }
-    .egreso { color: #ff4e50; }
-    
+    /* Lista Historial */
+    .item-mov { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 12px; }
+    .ingreso { color: #10b981; }
+    .egreso { color: #ef4444; }
+
     .tab-content { display: none; }
     .tab-content.active { display: block; }
   </style>
@@ -43,20 +49,34 @@
   <!-- Cabecera -->
   <div class="header-card">
     <h2>Patrimonio Total Estimado</h2>
-    <div class="total" id="patrimonioTotal">$0.00</div>
+    <div class="total" id="patrimonioUSD">$0.00 / €0.00</div>
+    <div class="subtotal" id="patrimonioBS">Bs. 0,00</div>
   </div>
 
-  <!-- Pestañas de Navegación -->
+  <!-- Tasas de Cambio -->
+  <div class="tasas-bar">
+    <div class="tasa-box">
+      <span>Tasa USD ($):</span>
+      <input type="number" id="tasaUSD" value="1" onchange="actualizarInterfaz()">
+    </div>
+    <div class="tasa-box">
+      <span>Tasa EUR (€):</span>
+      <input type="number" id="tasaEUR" value="1" onchange="actualizarInterfaz()">
+    </div>
+  </div>
+
+  <!-- Pestañas -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="cambiarPestaña('flujo')">Flujo</button>
-    <button class="tab-btn" onclick="cambiarPestaña('divisas')">Cuentas</button>
+    <button class="tab-btn active" onclick="verTab('flujo')">Flujo</button>
+    <button class="tab-btn" onclick="verTab('divisas')">Divisas</button>
+    <button class="tab-btn" onclick="verTab('cashea')">Cashea</button>
+    <button class="tab-btn" onclick="verTab('ajustes')">Ajustes</button>
   </div>
 
-  <!-- Vista 1: Flujo (Registrar Movimiento) -->
-  <div id="vista-flujo" class="tab-content active">
+  <!-- Vista: Flujo -->
+  <div id="tab-flujo" class="tab-content active">
     <div class="card">
       <h3>Registrar Movimiento</h3>
-      
       <div class="form-group">
         <label>Tipo de Operación</label>
         <select id="tipo" class="form-control">
@@ -64,164 +84,157 @@
           <option value="egreso">Egreso (-)</option>
         </select>
       </div>
-
       <div class="form-group">
-        <label>Cuenta / Método de Pago</label>
+        <label>Cuenta / Método</label>
         <select id="cuenta" class="form-control">
-          <option value="efectivo_usd">Efectivo (USD $)</option>
+          <option value="efectivo_usd">Efectivo USD ($)</option>
+          <option value="efectivo_eur">Efectivo EUR (€)</option>
           <option value="efectivo_bs">Efectivo (Bs.)</option>
           <option value="binance">Binance (USDT)</option>
           <option value="bdv">Banco de Venezuela (BDV)</option>
         </select>
       </div>
-
       <div class="form-group">
         <label>Monto</label>
         <input type="number" id="monto" class="form-control" placeholder="0.00" step="0.01">
       </div>
-
       <div class="form-group">
         <label>Descripción</label>
         <input type="text" id="descripcion" class="form-control" placeholder="Ej. Trabajo, Mercado, Servicios...">
       </div>
-
       <button class="btn-submit" onclick="guardarMovimiento()">Guardar Movimiento</button>
     </div>
 
     <div class="card">
-      <h3>Historial de Movimientos</h3>
-      <div id="listaHistorial">
-        <p style="color: #8899a6; font-size: 12px; text-align: center;">No hay movimientos registrados</p>
+      <h3>Historial</h3>
+      <div id="listaHistorial"><p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p></div>
+    </div>
+  </div>
+
+  <!-- Vista: Divisas / Cuentas -->
+  <div id="tab-divisas" class="tab-content">
+    <div class="card">
+      <h3>Cuentas y Efectivo</h3>
+      <div class="form-group">
+        <label>Efectivo USD ($)</label>
+        <input type="text" id="s-efectivo_usd" class="form-control" readonly>
+      </div>
+      <div class="form-group">
+        <label>Efectivo EUR (€)</label>
+        <input type="text" id="s-efectivo_eur" class="form-control" readonly>
+      </div>
+      <div class="form-group">
+        <label>Binance (USDT)</label>
+        <input type="text" id="s-binance" class="form-control" readonly>
+      </div>
+      <div class="form-group">
+        <label>Bolívares / Banco (BDV)</label>
+        <input type="text" id="s-bdv" class="form-control" readonly>
+      </div>
+      <div class="form-group">
+        <label>Bolívares Efectivo</label>
+        <input type="text" id="s-efectivo_bs" class="form-control" readonly>
       </div>
     </div>
   </div>
 
-  <!-- Vista 2: Estado de Cuentas -->
-  <div id="vista-divisas" class="tab-content">
+  <!-- Vista: Cashea -->
+  <div id="tab-cashea" class="tab-content">
     <div class="card">
-      <h3>Saldos Actuales por Cuenta</h3>
+      <h3>Gestión de Cashea</h3>
       <div class="form-group">
-        <label>Efectivo (USD $)</label>
-        <input type="text" id="saldo-efectivo_usd" class="form-control" value="$0.00" readonly>
+        <label>Límite Disponible ($)</label>
+        <input type="number" id="casheaDisponible" class="form-control" placeholder="0.00">
       </div>
       <div class="form-group">
-        <label>Efectivo (Bs.)</label>
-        <input type="text" id="saldo-efectivo_bs" class="form-control" value="Bs. 0.00" readonly>
+        <label>Deuda / Cuotas Pendientes ($)</label>
+        <input type="number" id="casheaDeuda" class="form-control" placeholder="0.00">
       </div>
-      <div class="form-group">
-        <label>Binance (USDT)</label>
-        <input type="text" id="saldo-binance" class="form-control" value="0.00 USDT" readonly>
-      </div>
-      <div class="form-group">
-        <label>Banco de Venezuela (BDV)</label>
-        <input type="text" id="saldo-bdv" class="form-control" value="Bs. 0.00" readonly>
-      </div>
+      <button class="btn-submit" onclick="guardarCashea()">Actualizar Cashea</button>
+    </div>
+  </div>
+
+  <!-- Vista: Ajustes -->
+  <div id="tab-ajustes" class="tab-content">
+    <div class="card">
+      <h3>Configuración</h3>
+      <button class="btn-submit" style="background: #ef4444;" onclick="borrarTodo()">Restablecer Todo</button>
     </div>
   </div>
 
   <script>
-    // Cargar o inicializar datos
-    let saldos = JSON.parse(localStorage.getItem('saldos')) || {
-      efectivo_usd: 0,
-      efectivo_bs: 0,
-      binance: 0,
-      bdv: 0
+    let saldos = JSON.parse(localStorage.getItem('saldos_v4')) || {
+      efectivo_usd: 0, efectivo_eur: 0, binance: 0, bdv: 0, efectivo_bs: 0, cashea_disp: 0, cashea_deuda: 0
     };
+    let historial = JSON.parse(localStorage.getItem('historial_v4')) || [];
 
-    let historial = JSON.parse(localStorage.getItem('historial')) || [];
-
-    // Cambiar de Pestaña
-    function cambiarPestaña(pestana) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active'));
-      
-      if(pestana === 'flujo') {
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        document.getElementById('vista-flujo').classList.add('active');
-      } else {
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        document.getElementById('vista-divisas').classList.add('active');
-      }
+    function verTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
     }
 
-    // Guardar Operación
     function guardarMovimiento() {
       const tipo = document.getElementById('tipo').value;
       const cuenta = document.getElementById('cuenta').value;
       const monto = parseFloat(document.getElementById('monto').value);
-      const descripcion = document.getElementById('descripcion').value || 'Sin descripción';
+      const desc = document.getElementById('descripcion').value || 'Sin descripción';
 
-      if (isNaN(monto) || monto <= 0) {
-        alert("Por favor ingresa un monto válido.");
-        return;
-      }
+      if (isNaN(monto) || monto <= 0) return alert('Ingresa un monto válido');
 
-      // Actualizar Saldo
-      if (tipo === 'ingreso') {
-        saldos[cuenta] += monto;
-      } else {
-        saldos[cuenta] -= monto;
-      }
+      saldos[cuenta] += (tipo === 'ingreso' ? monto : -monto);
+      historial.unshift({ tipo, cuenta, monto, desc, fecha: new Date().toLocaleDateString() });
 
-      // Guardar en Historial
-      historial.unshift({
-        tipo,
-        cuenta,
-        monto,
-        descripcion,
-        fecha: new Date().toLocaleDateString()
-      });
-
-      // Guardar en almacenamiento del navegador
-      localStorage.setItem('saldos', JSON.stringify(saldos));
-      localStorage.setItem('historial', JSON.stringify(historial));
-
-      // Limpiar campos y actualizar interfaz
+      guardarLocal();
       document.getElementById('monto').value = '';
       document.getElementById('descripcion').value = '';
       actualizarInterfaz();
     }
 
-    // Actualizar Vistas y Totales
-    function actualizarInterfaz() {
-      // Mostrar Saldos por Cuenta
-      document.getElementById('saldo-efectivo_usd').value = `$${saldos.efectivo_usd.toFixed(2)}`;
-      document.getElementById('saldo-efectivo_bs').value = `Bs. ${saldos.efectivo_bs.toFixed(2)}`;
-      document.getElementById('saldo-binance').value = `${saldos.binance.toFixed(2)} USDT`;
-      document.getElementById('saldo-bdv').value = `Bs. ${saldos.bdv.toFixed(2)}`;
-
-      // Calcular Patrimonio Total en USD
-      const totalUSD = saldos.efectivo_usd + saldos.binance;
-      document.getElementById('patrimonioTotal').innerText = `$${totalUSD.toFixed(2)}`;
-
-      // Renderizar Historial
-      const contenedor = document.getElementById('listaHistorial');
-      if (historial.length === 0) {
-        contenedor.innerHTML = '<p style="color: #8899a6; font-size: 12px; text-align: center;">No hay movimientos registrados</p>';
-        return;
-      }
-
-      contenedor.innerHTML = '';
-      historial.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'item-movimiento';
-        const signo = item.tipo === 'ingreso' ? '+' : '-';
-        const claseColor = item.tipo === 'ingreso' ? 'ingreso' : 'egreso';
-        
-        div.innerHTML = `
-          <div>
-            <strong>${item.descripcion}</strong><br>
-            <small style="color: #8899a6;">${item.cuenta.toUpperCase()} • ${item.fecha}</small>
-          </div>
-          <div class="${claseColor}">
-            ${signo}${item.monto.toFixed(2)}
-          </div>
-        `;
-        contenedor.appendChild(div);
-      });
+    function guardarCashea() {
+      saldos.cashea_disp = parseFloat(document.getElementById('casheaDisponible').value) || 0;
+      saldos.cashea_deuda = parseFloat(document.getElementById('casheaDeuda').value) || 0;
+      guardarLocal();
+      alert('Cashea actualizado');
     }
 
-    // Inicializar al cargar la página
+    function guardarLocal() {
+      localStorage.setItem('saldos_v4', JSON.stringify(saldos));
+      localStorage.setItem('historial_v4', JSON.stringify(historial));
+    }
+
+    function actualizarInterfaz() {
+      document.getElementById('s-efectivo_usd').value = `$${saldos.efectivo_usd.toFixed(2)}`;
+      document.getElementById('s-efectivo_eur').value = `€${saldos.efectivo_eur.toFixed(2)}`;
+      document.getElementById('s-binance').value = `${saldos.binance.toFixed(2)} USDT`;
+      document.getElementById('s-bdv').value = `Bs. ${saldos.bdv.toFixed(2)}`;
+      document.getElementById('s-efectivo_bs').value = `Bs. ${saldos.efectivo_bs.toFixed(2)}`;
+
+      const tUSD = parseFloat(document.getElementById('tasaUSD').value) || 1;
+      const totalUSD = saldos.efectivo_usd + saldos.binance + (saldos.bdv + saldos.efectivo_bs) / tUSD;
+      
+      document.getElementById('patrimonioUSD').innerText = `$${totalUSD.toFixed(2)} / €${saldos.efectivo_eur.toFixed(2)}`;
+      document.getElementById('patrimonioBS').innerText = `Bs. ${(totalUSD * tUSD).toFixed(2)}`;
+
+      const hist = document.getElementById('listaHistorial');
+      if (!historial.length) return hist.innerHTML = '<p style="color: #6b7280; font-size: 11px; text-align: center;">No hay movimientos registrados</p>';
+      
+      hist.innerHTML = historial.map(i => `
+        <div class="item-mov">
+          <div><strong>${i.desc}</strong><br><small style="color:#6b7280;">${i.cuenta.toUpperCase()} • ${i.fecha}</small></div>
+          <div class="${i.tipo}">${i.tipo === 'ingreso' ? '+' : '-'}${i.monto.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    function borrarTodo() {
+      if(confirm('¿Seguro que deseas reiniciar los datos?')) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
     actualizarInterfaz();
   </script>
 </body>
